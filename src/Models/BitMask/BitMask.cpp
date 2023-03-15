@@ -11,7 +11,7 @@ BitMask::BitMask(int _pin1, int _pin2, int _pin3){
     mask = pin1+pin2+pin3;
 }
 
-int BitMask::DecToHex(){
-
-    return mask;   
+uint64_t BitMask::DecToHex(){
+    uint64_t maskHex = mask;
+    return maskHex;   
 }

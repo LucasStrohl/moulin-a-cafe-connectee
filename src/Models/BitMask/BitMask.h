@@ -11,5 +11,5 @@ class BitMask{
       BitMask();
       BitMask(int _pin1, int _pin2, int pin_3);
 
-      int DecToHex();
+      uint64_t DecToHex();
 };
