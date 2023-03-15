@@ -5,12 +5,17 @@
 #include "./Models/UpDownButton/UpDownButton.h"
 #include "./Models/Balance/Balance.h"
 #include "./Models/Display/Display.h"
+#include "./Models/BitMask/BitMask.h"
 
 
 //Button
 #define DownButtonPin 33
 #define UpButtonPin 32
 #define Ok_buttonPin 14
+
+// 2^33 = 8 589 934 592 2^32  2^32= 4 294 967 296  2^14= 16 384
+//#define BUTTON_PIN_BITMASK 
+BitMask BUTTON_PIN_BITMASK;
 
 Button okButton;
 UpDownButton downButton;
@@ -45,8 +50,16 @@ void setup()
     delay(500);
     display.Refresh(counter);
 
+    BUTTON_PIN_BITMASK = BitMask(Ok_buttonPin, DownButtonPin, UpButtonPin);
+
     pinMode(signalSwitch, OUTPUT);
 }
+
+/*void LightSleep()
+{
+  esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK.DecToHex(), ESP_EXT1_WAKEUP_ANY_HIGH); // ext1 for more than one pin
+  esp_light_sleep_start();
+}*/
 
 void loop()
 {
@@ -57,11 +70,13 @@ void loop()
     if (downButton.state == LOW)
     {
         counter = downButton.IncrementCounter(counter);
+        Serial.print("down button");
     }
     
     if (upButton.state == LOW)
     {
         counter = upButton.IncrementCounter(counter);
+        Serial.print("up button");
     }
 
     if (counter < 0)
@@ -71,6 +86,7 @@ void loop()
     
     if (okButton.state == LOW)
     {
+        Serial.print("ok");
         balance.tare();
         float value = balance.getValue();
         display.PrintLoad(value, counter);
@@ -86,4 +102,6 @@ void loop()
 
     display.Refresh(counter);
     delay(120);
+
+    //LightSleep();
 }
