@@ -73,3 +73,7 @@ void Display::PrintLoad(float load, float maxLoad)
 
     display.display();
 }
+
+void Display::Clear(){
+    display.clearDisplay();
+}

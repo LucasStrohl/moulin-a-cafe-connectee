@@ -11,6 +11,7 @@ class Display{
         void PrintText(int size, int x, int y, String text);
         void Header();
         void Refresh(int counter);
+        void Clear();
 
     private:
         int width = 128;

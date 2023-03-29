@@ -7,18 +7,12 @@
 #include "./Models/Display/Display.h"
 #include "./Models/BitMask/BitMask.h"
 
-
 //Button
 
 // ESP32
 #define DownButtonPin 33
-#define Ok_buttonPin 14
 #define UpButtonPin 32
-
-// ESP82
-//#define DownButtonPin 14
-//#define UpButtonPin 13
-//#define Ok_buttonPin 12
+#define Ok_buttonPin 14 
 
 // 2^33 = 8 589 934 592 2^32  2^32= 4 294 967 296  2^14= 16 384
 //#define BUTTON_PIN_BITMASK 
@@ -43,9 +37,12 @@ Display display;
 #define initialCounter 100
 int counter = initialCounter;
 
+unsigned long time_start;
+unsigned long previousMillis=0;
+
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(9600);
     Serial.println("Serial Begin !!!!!!!!!!!!!!!!!!!!!!!!");
     
     okButton = Button(Ok_buttonPin);
@@ -62,16 +59,22 @@ void setup()
 
     pinMode(signalSwitch, OUTPUT);
 }
-
 void LightSleep()
 {
-  Serial.print(BUTTON_PIN_BITMASK.DecToHex());
-  esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK.DecToHex(), ESP_EXT1_WAKEUP_ANY_HIGH); // ext1 for more than one pin
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, LOW);
   esp_light_sleep_start();
 }
 
 void loop()
 {
+    time_start = millis();
+    Serial.println(time_start);
+    if ((unsigned long)(time_start - previousMillis) >= 300000) {
+        previousMillis = time_start;
+        delay(500);
+        LightSleep();
+    }
+
     downButton.Check();
     upButton.Check();
     okButton.Check();
@@ -79,23 +82,23 @@ void loop()
     if (downButton.state == LOW)
     {
         counter = downButton.IncrementCounter(counter);
-        Serial.print("down button");
+        Serial.println("down button");
     }
-    
+
     if (upButton.state == LOW)
     {
         counter = upButton.IncrementCounter(counter);
-        Serial.print("up button");
+        Serial.println("up button");
     }
 
     if (counter < 0)
     {
         counter = 0;
     }
-    
+
     if (okButton.state == LOW)
     {
-        Serial.print("ok");
+        Serial.println("ok");
         balance.tare();
         float value = balance.getValue();
         display.PrintLoad(value, counter);
@@ -107,15 +110,10 @@ void loop()
         }
         digitalWrite(signalSwitch, LOW);
         counter = initialCounter;
+        display.Clear();
     }
 
     display.Refresh(counter);
     delay(120);
 
-    Serial.println("is awake");
-    delay(1000);
-    Serial.println("going to sleep");
-    delay(1000);
-
-    LightSleep();
 }
