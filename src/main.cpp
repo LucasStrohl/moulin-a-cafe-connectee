@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
+#include <esp_sleep.h>
 #include "./Models/Button/Button.h"
 #include "./Models/UpDownButton/UpDownButton.h"
 #include "./Models/Balance/Balance.h"
@@ -15,8 +16,8 @@
 #define Ok_buttonPin 14 
 
 // 2^33 = 8 589 934 592 2^32  2^32= 4 294 967 296  2^14= 16 384
-//#define BUTTON_PIN_BITMASK 
-BitMask BUTTON_PIN_BITMASK;
+#define BUTTON_PIN_BITMASK 0x300004000
+//BitMask BUTTON_PIN_BITMASK;
 
 Button okButton;
 UpDownButton downButton;
@@ -55,40 +56,42 @@ void setup()
     delay(500);
     display.Refresh(counter);
 
-    BUTTON_PIN_BITMASK = BitMask(Ok_buttonPin, DownButtonPin, UpButtonPin);
+    //BUTTON_PIN_BITMASK = BitMask(Ok_buttonPin, DownButtonPin, UpButtonPin);
 
     pinMode(signalSwitch, OUTPUT);
 }
 void LightSleep()
 {
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, LOW);
-  esp_light_sleep_start();
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, LOW);
+    display.Clear();
+    esp_light_sleep_start();
 }
 
 void loop()
 {
     time_start = millis();
-    Serial.println(time_start);
-    if ((unsigned long)(time_start - previousMillis) >= 300000) {
+    if ((unsigned long)(time_start - previousMillis) >= 10000) {
         previousMillis = time_start;
-        delay(500);
+        Serial.println("is asleep");
+        display.Clear();
         LightSleep();
     }
 
     downButton.Check();
     upButton.Check();
+    delay(100);
     okButton.Check();
 
     if (downButton.state == LOW)
     {
         counter = downButton.IncrementCounter(counter);
-        Serial.println("down button");
+        //Serial.println("down button");
     }
 
     if (upButton.state == LOW)
     {
         counter = upButton.IncrementCounter(counter);
-        Serial.println("up button");
+        //Serial.println("up button");
     }
 
     if (counter < 0)
@@ -96,8 +99,9 @@ void loop()
         counter = 0;
     }
 
-    if (okButton.state == LOW)
+    if (okButton.state == HIGH)
     {
+        previousMillis = time_start;
         Serial.println("ok");
         balance.tare();
         float value = balance.getValue();
